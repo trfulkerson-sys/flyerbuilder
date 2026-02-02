@@ -57,6 +57,20 @@ export default async function Home() {
           </div>
         </div>
 
+        {/* Create Flyer CTA */}
+        {connectionStatus === 'Connected' && loCount > 0 && (
+          <div className="bg-[#403e36] rounded-lg shadow-lg p-8 mb-8 text-center">
+            <h2 className="text-2xl font-bold text-white mb-2">Ready to Create a Flyer?</h2>
+            <p className="text-gray-300 mb-6">Your system is set up. Start creating property flyers now.</p>
+            <a
+              href="/flyer/new"
+              className="inline-block bg-green-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-600 transition-colors"
+            >
+              Create New Flyer
+            </a>
+          </div>
+        )}
+
         {/* Next Steps Card */}
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h2 className="text-xl font-semibold text-[#403e36] mb-4">Setup Checklist</h2>
@@ -75,8 +89,8 @@ export default async function Home() {
               <span className="text-gray-700">Add at least one Loan Officer</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-1 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs"></span>
-              <span className="text-gray-700">Build flyer creation form (coming next)</span>
+              <span className="mt-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">✓</span>
+              <span className="text-gray-700">Build flyer creation form</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-1 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs"></span>
