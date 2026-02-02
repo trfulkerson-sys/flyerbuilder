@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import FlyerForm, { FlyerData } from '@/components/flyer/FlyerForm'
 import FlyerPreview from '@/components/flyer/FlyerPreview'
-import { adjustApiRate } from '@/lib/calculator/kickstart'
+import PropertyPhotoUpload from '@/components/flyer/PropertyPhotoUpload'
 
 const DEFAULT_RATE = 6.99
 
@@ -22,6 +22,7 @@ export default function NewFlyerPage() {
     squareFootage: 0,
     downPaymentPercent: 20,
     interestRate: DEFAULT_RATE,
+    propertyPhotoUrl: null,
   })
 
   // Fetch live interest rate on mount
@@ -88,6 +89,14 @@ export default function NewFlyerPage() {
               interestRate={interestRate}
             />
 
+            {/* Photo Upload */}
+            <div className="mt-6">
+              <PropertyPhotoUpload
+                photoUrl={flyerData.propertyPhotoUrl}
+                onPhotoChange={(url) => setFlyerData({ ...flyerData, propertyPhotoUrl: url })}
+              />
+            </div>
+
             {/* Actions */}
             <div className="mt-6 flex gap-3">
               <button
@@ -115,7 +124,7 @@ export default function NewFlyerPage() {
                 loanOfficer={loanOfficer}
               />
               <p className="text-xs text-gray-500 text-center mt-3">
-                Preview updates as you type. Photo upload coming soon.
+                Preview updates as you type
               </p>
             </div>
           </div>

@@ -14,6 +14,7 @@ export interface FlyerData {
   squareFootage: number
   downPaymentPercent: number
   interestRate: number
+  propertyPhotoUrl: string | null
 }
 
 interface FlyerFormProps {
