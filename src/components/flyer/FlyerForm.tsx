@@ -61,7 +61,7 @@ export default function FlyerForm({ data, onChange, interestRate }: FlyerFormPro
               value={data.propertyAddress}
               onChange={(e) => handleChange('propertyAddress', e.target.value)}
               placeholder="123 Main Street"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
@@ -73,7 +73,7 @@ export default function FlyerForm({ data, onChange, interestRate }: FlyerFormPro
                 value={data.propertyCity}
                 onChange={(e) => handleChange('propertyCity', e.target.value)}
                 placeholder="San Diego"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent text-gray-900 placeholder:text-gray-400"
               />
             </div>
             <div className="col-span-1">
@@ -84,7 +84,7 @@ export default function FlyerForm({ data, onChange, interestRate }: FlyerFormPro
                 onChange={(e) => handleChange('propertyState', e.target.value.toUpperCase().slice(0, 2))}
                 placeholder="CA"
                 maxLength={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent text-gray-900 placeholder:text-gray-400"
               />
             </div>
             <div className="col-span-2">
@@ -95,7 +95,7 @@ export default function FlyerForm({ data, onChange, interestRate }: FlyerFormPro
                 onChange={(e) => handleChange('propertyZip', e.target.value.replace(/[^0-9]/g, '').slice(0, 5))}
                 placeholder="92101"
                 maxLength={5}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent text-gray-900 placeholder:text-gray-400"
               />
             </div>
           </div>
@@ -112,13 +112,13 @@ export default function FlyerForm({ data, onChange, interestRate }: FlyerFormPro
               Listing Price
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700">$</span>
               <input
                 type="text"
                 value={formatPriceDisplay(data.propertyPrice)}
                 onChange={(e) => handleChange('propertyPrice', parsePriceInput(e.target.value))}
                 placeholder="750,000"
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent"
+                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent text-gray-900 placeholder:text-gray-400"
               />
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function FlyerForm({ data, onChange, interestRate }: FlyerFormPro
                 onChange={(e) => handleChange('bedrooms', parseInt(e.target.value) || 0)}
                 placeholder="4"
                 min="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent text-gray-900 placeholder:text-gray-400"
               />
             </div>
             <div>
@@ -144,7 +144,7 @@ export default function FlyerForm({ data, onChange, interestRate }: FlyerFormPro
                 placeholder="2.5"
                 min="0"
                 step="0.5"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent text-gray-900 placeholder:text-gray-400"
               />
             </div>
             <div>
@@ -154,7 +154,7 @@ export default function FlyerForm({ data, onChange, interestRate }: FlyerFormPro
                 value={data.squareFootage ? data.squareFootage.toLocaleString() : ''}
                 onChange={(e) => handleChange('squareFootage', parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0)}
                 placeholder="2,500"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#403e36] focus:border-transparent text-gray-900 placeholder:text-gray-400"
               />
             </div>
           </div>
