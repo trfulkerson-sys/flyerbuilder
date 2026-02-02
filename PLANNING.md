@@ -336,9 +336,11 @@ Not building now, but architecture supports these:
 ### Calculator Integration
 - Calculator logic lives in `/lib/calculator/kickstart.ts`
 - Same math as existing calculator at thekatalystteam.com/kickstart
-- Called on property price change to update preview
-- Results stored in flyer record (snapshot at time of save)
-- Can be refreshed if user edits flyer later
+- **Interest rate is auto-fetched** from API (+ 10 bps) - realtors cannot edit it
+- Rate is fetched when creating a new flyer and stored with the flyer
+- If API is down, fall back to last known rate or default (6.99%)
+- Results stored in flyer record (snapshot at time of creation)
+- Realtors who want to explore rate scenarios should use the main calculator
 
 ### Photo Repositioning
 - Use `react-image-crop` for crop/zoom UI
@@ -376,10 +378,10 @@ NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 
 ## Questions to Resolve During Build
 
-1. **Exact calculator formula** - Will review existing code when we get there
+1. ~~**Exact calculator formula**~~ - DONE: Extracted to `/lib/calculator/kickstart.ts`
 2. **Font choices for PDF** - Need to match brand guidelines
-3. **Color hex codes** - Extract from brand assets
-4. **Default interest rate source** - API or manual update?
+3. **Color hex codes** - Extract from brand assets (ethos-tan: #FAF5F0, ethos-brown: #403e36)
+4. ~~**Default interest rate source**~~ - DONE: API (api-ninjas.com) + 10 bps, auto-fetched, not editable by realtors
 5. **Image quality requirements** - Minimum resolution for uploads
 
 ---

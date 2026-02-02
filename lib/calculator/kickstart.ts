@@ -39,6 +39,15 @@ export interface KickstartResult {
 
 const ANNUAL_SAVINGS_CAP = 6000;
 const KICKSTART_RATE_REDUCTION = 1; // 1% reduction
+const RATE_ADJUSTMENT_BPS = 0.10; // Add 10 basis points to API rate
+
+/**
+ * Adjust the raw API rate by adding 10 basis points
+ * This is the standard adjustment applied to api-ninjas rates
+ */
+export function adjustApiRate(rawApiRate: number): number {
+  return rawApiRate + RATE_ADJUSTMENT_BPS;
+}
 
 /**
  * Calculate monthly mortgage payment (Principal & Interest)
