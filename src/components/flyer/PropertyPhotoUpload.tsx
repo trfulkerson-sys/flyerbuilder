@@ -6,9 +6,18 @@ import { createClient } from '@/lib/supabase/client'
 interface PropertyPhotoUploadProps {
   photoUrl: string | null
   onPhotoChange: (url: string | null) => void
+  positionX: number
+  positionY: number
+  onPositionChange: (x: number, y: number) => void
 }
 
-export default function PropertyPhotoUpload({ photoUrl, onPhotoChange }: PropertyPhotoUploadProps) {
+export default function PropertyPhotoUpload({
+  photoUrl,
+  onPhotoChange,
+  positionX,
+  positionY,
+  onPositionChange
+}: PropertyPhotoUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -93,6 +102,7 @@ export default function PropertyPhotoUpload({ photoUrl, onPhotoChange }: Propert
 
   const handleRemove = () => {
     onPhotoChange(null)
+    onPositionChange(50, 50) // Reset position
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -103,22 +113,71 @@ export default function PropertyPhotoUpload({ photoUrl, onPhotoChange }: Propert
       <h3 className="text-lg font-semibold text-[#403e36] mb-4">Property Photo</h3>
 
       {photoUrl ? (
-        // Photo preview
-        <div className="relative">
-          <img
-            src={photoUrl}
-            alt="Property"
-            className="w-full h-48 object-cover rounded-lg"
-          />
-          <button
-            onClick={handleRemove}
-            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-            title="Remove photo"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        // Photo preview with position controls
+        <div>
+          <div className="relative mb-4">
+            <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100">
+              <img
+                src={photoUrl}
+                alt="Property"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: `${positionX}% ${positionY}%` }}
+              />
+            </div>
+            <button
+              onClick={handleRemove}
+              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+              title="Remove photo"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Position controls */}
+          <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
+            <p className="text-sm font-medium text-gray-700">Adjust Photo Position</p>
+
+            <div>
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Left</span>
+                <span>Horizontal: {positionX}%</span>
+                <span>Right</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={positionX}
+                onChange={(e) => onPositionChange(parseInt(e.target.value), positionY)}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Top</span>
+                <span>Vertical: {positionY}%</span>
+                <span>Bottom</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={positionY}
+                onChange={(e) => onPositionChange(positionX, parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            <button
+              onClick={() => onPositionChange(50, 50)}
+              className="text-xs text-[#403e36] hover:underline"
+            >
+              Reset to center
+            </button>
+          </div>
         </div>
       ) : (
         // Upload area with drag and drop
@@ -170,9 +229,11 @@ export default function PropertyPhotoUpload({ photoUrl, onPhotoChange }: Propert
         <p className="text-red-500 text-sm mt-2">{error}</p>
       )}
 
-      <p className="text-gray-500 text-xs mt-3">
-        Tip: Use a high-quality landscape photo for best results
-      </p>
+      {!photoUrl && (
+        <p className="text-gray-500 text-xs mt-3">
+          Tip: Use a high-quality landscape photo for best results
+        </p>
+      )}
     </div>
   )
 }

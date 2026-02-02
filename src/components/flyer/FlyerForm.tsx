@@ -15,6 +15,8 @@ export interface FlyerData {
   downPaymentPercent: number
   interestRate: number
   propertyPhotoUrl: string | null
+  photoPositionX: number  // 0-100, default 50 (center)
+  photoPositionY: number  // 0-100, default 50 (center)
 }
 
 interface FlyerFormProps {

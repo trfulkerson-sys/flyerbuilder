@@ -23,6 +23,8 @@ export default function NewFlyerPage() {
     downPaymentPercent: 20,
     interestRate: DEFAULT_RATE,
     propertyPhotoUrl: null,
+    photoPositionX: 50,
+    photoPositionY: 50,
   })
 
   // Fetch live interest rate on mount
@@ -94,6 +96,9 @@ export default function NewFlyerPage() {
               <PropertyPhotoUpload
                 photoUrl={flyerData.propertyPhotoUrl}
                 onPhotoChange={(url) => setFlyerData({ ...flyerData, propertyPhotoUrl: url })}
+                positionX={flyerData.photoPositionX}
+                positionY={flyerData.photoPositionY}
+                onPositionChange={(x, y) => setFlyerData({ ...flyerData, photoPositionX: x, photoPositionY: y })}
               />
             </div>
 

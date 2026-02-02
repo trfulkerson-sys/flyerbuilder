@@ -42,6 +42,7 @@ export default function FlyerPreview({ data, interestRate, loanOfficer }: FlyerP
             src={data.propertyPhotoUrl}
             alt="Property"
             className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: `${data.photoPositionX}% ${data.photoPositionY}%` }}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-gray-500">
@@ -74,27 +75,27 @@ export default function FlyerPreview({ data, interestRate, loanOfficer }: FlyerP
         </div>
 
         {/* Address line */}
-        <div className="text-center border-b-2 border-black pb-1 mb-2 text-[10px]">
+        <div className="text-center border-b-2 border-black pb-1 mb-2 text-[10px] text-black">
           <span className="font-semibold">{fullAddress}</span>
-          <span className="mx-3 text-gray-400">|</span>
-          <span>{propertySpecs}</span>
+          <span className="mx-3 text-gray-600">|</span>
+          <span className="text-gray-800">{propertySpecs}</span>
         </div>
 
         {/* Payment Comparison */}
         <div className="text-center mb-1">
-          <h3 className="font-bold text-[10px]">EXCLUSIVE PROPERTY INCENTIVE</h3>
+          <h3 className="font-bold text-[10px] text-black">EXCLUSIVE PROPERTY INCENTIVE</h3>
         </div>
 
         <div className="border border-gray-300 rounded-lg p-2 mb-2">
-          <div className="text-center text-[9px] font-semibold mb-1">PAYMENT COMPARISON</div>
-          <div className="text-center text-[8px] text-gray-500 mb-1">*payments based on {data.downPaymentPercent}% down payment</div>
+          <div className="text-center text-[9px] font-semibold mb-1 text-black">PAYMENT COMPARISON</div>
+          <div className="text-center text-[8px] text-gray-600 mb-1">*payments based on {data.downPaymentPercent}% down payment</div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="text-center">
-              <div className="text-gray-600 text-[8px]">Standard Rate Payment</div>
-              <div className="text-[8px] text-gray-500">Rate: {formatRate(calculation.standardRate)}</div>
-              <div className="text-sm font-bold">{formatCurrency(calculation.standardPayment)}</div>
-              <div className="text-[8px] text-gray-500">Principal & Interest</div>
+              <div className="text-gray-700 text-[8px]">Standard Rate Payment</div>
+              <div className="text-[8px] text-gray-600">Rate: {formatRate(calculation.standardRate)}</div>
+              <div className="text-sm font-bold text-black">{formatCurrency(calculation.standardPayment)}</div>
+              <div className="text-[8px] text-gray-600">Principal & Interest</div>
             </div>
             <div className="text-center bg-green-50 rounded p-1">
               <div className="text-green-700 text-[8px]">Year 1 Katalyst Kickstart Payment</div>
