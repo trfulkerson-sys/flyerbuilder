@@ -102,14 +102,7 @@ Each saved flyer with all property data and calculated values.
 | photo_position_y | numeric | Vertical position (0-100%) |
 | photo_zoom | numeric | Zoom/scale level (1 = 100%) |
 | **Calculated Values** | | |
-| interest_rate | numeric | Rate used for calculation |
-| down_payment_percent | numeric | Down payment % used |
-| loan_amount | integer | Calculated loan amount |
-| standard_payment | numeric | Monthly P&I at standard rate |
-| kickstart_payment | numeric | Monthly P&I at reduced rate |
-| monthly_savings | numeric | Difference per month |
-| annual_savings | numeric | Yearly savings (capped at $6,000) |
-| lender_credit | numeric | Credit amount shown |
+| down_payment_percent | numeric | Down payment % used (default 20) |
 
 ### Table: `flyer_downloads`
 Track downloads for basic analytics (optional, Phase 4).
@@ -336,11 +329,12 @@ Not building now, but architecture supports these:
 ### Calculator Integration
 - Calculator logic lives in `/lib/calculator/kickstart.ts`
 - Same math as existing calculator at thekatalystteam.com/kickstart
-- **Interest rate is auto-fetched** from API (+ 10 bps) - realtors cannot edit it
-- Rate is fetched when creating a new flyer and stored with the flyer
+- **Interest rate is always live** - fetched from API (+ 10 bps) every time flyer is viewed
+- Rate is NOT stored in database - always reflects current market
 - If API is down, fall back to last known rate or default (6.99%)
-- Results stored in flyer record (snapshot at time of creation)
-- Realtors who want to explore rate scenarios should use the main calculator
+- Calculations happen on render, not stored (keeps flyers current)
+- Downloaded PDF captures the rate at moment of download (that's the snapshot)
+- Realtors cannot edit rate - if they want to explore scenarios, use the main calculator
 
 ### Photo Repositioning
 - Use `react-image-crop` for crop/zoom UI
