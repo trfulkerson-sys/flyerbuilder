@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Launch browser
     console.log('PDF Generation - launching browser...')
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [...chromium.args, '--disable-dev-shm-usage'],
       defaultViewport: { width: 816, height: 1056 },
       executablePath,
       headless: true,
