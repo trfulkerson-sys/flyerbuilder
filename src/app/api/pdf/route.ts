@@ -6,10 +6,6 @@ import chromium from '@sparticuz/chromium'
 export const maxDuration = 60 // 60 seconds timeout for PDF generation
 export const dynamic = 'force-dynamic'
 
-// Ensure chromium is configured for serverless
-chromium.setHeadlessMode = true
-chromium.setGraphicsMode = false
-
 export async function POST(request: NextRequest) {
   let browser = null
 
