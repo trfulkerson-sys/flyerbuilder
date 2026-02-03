@@ -74,6 +74,18 @@ export default function NewFlyerPage() {
         useCORS: true, // Allow cross-origin images
         logging: false,
         backgroundColor: '#ffffff',
+        // Fix for modern CSS color functions like lab() that html2canvas doesn't support
+        onclone: (_document, element) => {
+          // Convert computed colors to avoid lab() parsing issues
+          const allElements = element.querySelectorAll('*')
+          allElements.forEach((el) => {
+            const htmlEl = el as HTMLElement
+            const computed = window.getComputedStyle(htmlEl)
+            htmlEl.style.color = computed.color
+            htmlEl.style.backgroundColor = computed.backgroundColor
+            htmlEl.style.borderColor = computed.borderColor
+          })
+        }
       })
 
       // Create PDF in letter size (8.5 x 11 inches)
