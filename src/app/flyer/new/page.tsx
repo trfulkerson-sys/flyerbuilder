@@ -10,6 +10,7 @@ const DEFAULT_RATE = 6.99
 export default function NewFlyerPage() {
   const [interestRate, setInterestRate] = useState(DEFAULT_RATE)
   const [rateLoading, setRateLoading] = useState(true)
+  const [downloading, setDownloading] = useState(false)
 
   const [flyerData, setFlyerData] = useState<FlyerData>({
     propertyAddress: '',
@@ -53,6 +54,44 @@ export default function NewFlyerPage() {
     name: 'Trevor Fulkerson',
     phone: '619-569-8648',
     nmls_number: '12345',
+  }
+
+  // Download PDF handler
+  const handleDownloadPDF = async () => {
+    setDownloading(true)
+    try {
+      const response = await fetch('/api/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flyerData,
+          interestRate,
+          loanOfficer,
+          format: 'pdf'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate PDF')
+      }
+
+      // Download the file
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `flyer-${flyerData.propertyAddress || 'property'}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Download error:', error)
+      alert(error instanceof Error ? error.message : 'Failed to download PDF')
+    } finally {
+      setDownloading(false)
+    }
   }
 
   return (
@@ -111,10 +150,11 @@ export default function NewFlyerPage() {
                 Save Flyer
               </button>
               <button
-                className="flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors"
-                onClick={() => alert('PDF download coming soon!')}
+                className="flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleDownloadPDF}
+                disabled={downloading}
               >
-                Download PDF
+                {downloading ? 'Generating PDF...' : 'Download PDF'}
               </button>
             </div>
           </div>
