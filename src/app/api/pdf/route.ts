@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
     // Wait for content to be ready
     await page.waitForSelector('#flyer-content', { timeout: 10000 })
 
-    let result: Uint8Array
     let contentType: string
     let filename: string
+    let arrayBuffer: ArrayBuffer
 
     if (format === 'png') {
       // Generate PNG screenshot
@@ -68,7 +68,9 @@ export async function POST(request: NextRequest) {
         type: 'png',
         omitBackground: false,
       })
-      result = new Uint8Array(screenshot)
+      // Copy to fresh ArrayBuffer to satisfy TypeScript
+      arrayBuffer = new ArrayBuffer(screenshot.byteLength)
+      new Uint8Array(arrayBuffer).set(screenshot)
       contentType = 'image/png'
       filename = 'flyer.png'
     } else {
@@ -78,16 +80,17 @@ export async function POST(request: NextRequest) {
         printBackground: true,
         margin: { top: 0, right: 0, bottom: 0, left: 0 },
       })
-      result = new Uint8Array(pdf)
+      // Copy to fresh ArrayBuffer to satisfy TypeScript
+      arrayBuffer = new ArrayBuffer(pdf.byteLength)
+      new Uint8Array(arrayBuffer).set(pdf)
       contentType = 'application/pdf'
       filename = 'flyer.pdf'
     }
 
     await browser.close()
 
-    // Return the file as a Blob
-    const blob = new Blob([result], { type: contentType })
-    return new Response(blob, {
+    // Return the file
+    return new Response(arrayBuffer, {
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${filename}"`,
