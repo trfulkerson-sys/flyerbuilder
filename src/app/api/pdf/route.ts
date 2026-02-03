@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       args: chromium.args,
       defaultViewport: null,
       executablePath,
-      headless: chromium.headless,
+      headless: true,
     })
 
     const page = await browser.newPage()
