@@ -30,21 +30,17 @@ export async function POST(request: NextRequest) {
 
     const renderUrl = `${baseUrl}/flyer/render?data=${encodeURIComponent(encodedData)}`
 
-    // Get chromium executable path
-    const executablePath = await chromium.executablePath()
+    // Get chromium executable path - download from remote for Vercel serverless
+    const executablePath = await chromium.executablePath(
+      'https://github.com/nicholaschiang/puppeteer-core/releases/download/v1.0.0/chromium.br'
+    )
 
     // Launch browser with Vercel-optimized settings
     browser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ],
+      args: chromium.args,
       defaultViewport: null,
       executablePath,
-      headless: true,
+      headless: chromium.headless,
     })
 
     const page = await browser.newPage()
