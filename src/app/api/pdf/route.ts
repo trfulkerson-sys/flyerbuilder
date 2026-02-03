@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Wait for content to be ready
     await page.waitForSelector('#flyer-content', { timeout: 10000 })
 
-    let result: Buffer
+    let result: Uint8Array
     let contentType: string
     let filename: string
 
@@ -64,19 +64,21 @@ export async function POST(request: NextRequest) {
       if (!element) {
         throw new Error('Flyer content not found')
       }
-      result = await element.screenshot({
+      const screenshot = await element.screenshot({
         type: 'png',
         omitBackground: false,
-      }) as Buffer
+      })
+      result = new Uint8Array(screenshot)
       contentType = 'image/png'
       filename = 'flyer.png'
     } else {
       // Generate PDF
-      result = await page.pdf({
+      const pdf = await page.pdf({
         format: 'Letter',
         printBackground: true,
         margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      }) as Buffer
+      })
+      result = new Uint8Array(pdf)
       contentType = 'application/pdf'
       filename = 'flyer.pdf'
     }
