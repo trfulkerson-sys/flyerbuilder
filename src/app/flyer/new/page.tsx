@@ -73,6 +73,7 @@ export default function NewFlyerPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('PDF API error:', errorData)
         throw new Error(errorData.details || errorData.error || 'Failed to generate PDF')
       }
 

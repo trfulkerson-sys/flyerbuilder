@@ -121,8 +121,18 @@ export async function POST(request: NextRequest) {
         console.error('Error closing browser:', closeError)
       }
     }
+
+    // Get detailed error info
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Error details:', { message: errorMessage, stack: errorStack })
+
     return NextResponse.json(
-      { error: 'Failed to generate PDF', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to generate PDF',
+        details: errorMessage,
+        stack: errorStack
+      },
       { status: 500 }
     )
   }
