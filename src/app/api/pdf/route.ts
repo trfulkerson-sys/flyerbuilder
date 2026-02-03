@@ -3,10 +3,16 @@ import puppeteer from 'puppeteer-core'
 import chromium from '@sparticuz/chromium'
 
 // Configure for Vercel serverless
-export const maxDuration = 30 // 30 seconds timeout
+export const maxDuration = 60 // 60 seconds timeout for PDF generation
 export const dynamic = 'force-dynamic'
 
+// Ensure chromium is configured for serverless
+chromium.setHeadlessMode = true
+chromium.setGraphicsMode = false
+
 export async function POST(request: NextRequest) {
+  let browser = null
+
   try {
     const body = await request.json()
     const { flyerData, interestRate, loanOfficer, format = 'pdf' } = body
@@ -28,11 +34,20 @@ export async function POST(request: NextRequest) {
 
     const renderUrl = `${baseUrl}/flyer/render?data=${encodeURIComponent(encodedData)}`
 
-    // Launch browser
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: null, // We set viewport manually below
-      executablePath: await chromium.executablePath(),
+    // Get chromium executable path
+    const executablePath = await chromium.executablePath()
+
+    // Launch browser with Vercel-optimized settings
+    browser = await puppeteer.launch({
+      args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
+      defaultViewport: null,
+      executablePath,
       headless: true,
     })
 
@@ -98,6 +113,14 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('PDF generation error:', error)
+    // Make sure to close browser on error
+    if (browser) {
+      try {
+        await browser.close()
+      } catch (closeError) {
+        console.error('Error closing browser:', closeError)
+      }
+    }
     return NextResponse.json(
       { error: 'Failed to generate PDF', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

@@ -73,7 +73,7 @@ export default function NewFlyerPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate PDF')
+        throw new Error(errorData.details || errorData.error || 'Failed to generate PDF')
       }
 
       // Download the file
