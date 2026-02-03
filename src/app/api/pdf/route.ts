@@ -85,8 +85,9 @@ export async function POST(request: NextRequest) {
 
     await browser.close()
 
-    // Return the file
-    return new Response(result.buffer, {
+    // Return the file as a Blob
+    const blob = new Blob([result], { type: contentType })
+    return new Response(blob, {
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${filename}"`,
