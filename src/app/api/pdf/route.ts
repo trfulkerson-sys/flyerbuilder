@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     await browser.close()
 
     // Return the file
-    return new NextResponse(result, {
+    return new Response(result.buffer, {
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${filename}"`,
