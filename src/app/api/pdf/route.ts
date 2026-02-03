@@ -32,9 +32,10 @@ export async function POST(request: NextRequest) {
     console.log('PDF Generation - renderUrl:', renderUrl)
     console.log('PDF Generation - origin:', origin)
 
-    // Get chromium executable path (no URL - use built-in)
+    // Get chromium executable path from remote URL (Vercel doesn't bundle local binaries)
     console.log('PDF Generation - getting chromium executablePath...')
-    const executablePath = await chromium.executablePath()
+    const chromiumUrl = 'https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar'
+    const executablePath = await chromium.executablePath(chromiumUrl)
     console.log('PDF Generation - executablePath:', executablePath)
 
     // Launch browser
