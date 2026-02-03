@@ -25,6 +25,7 @@ export default function NewFlyerPage() {
     propertyPhotoUrl: null,
     photoPositionX: 50,
     photoPositionY: 50,
+    photoZoom: 100,
   })
 
   // Fetch live interest rate on mount
@@ -95,10 +96,9 @@ export default function NewFlyerPage() {
             <div className="mt-6">
               <PropertyPhotoUpload
                 photoUrl={flyerData.propertyPhotoUrl}
-                onPhotoChange={(url) => setFlyerData({ ...flyerData, propertyPhotoUrl: url })}
-                positionX={flyerData.photoPositionX}
-                positionY={flyerData.photoPositionY}
-                onPositionChange={(x, y) => setFlyerData({ ...flyerData, photoPositionX: x, photoPositionY: y })}
+                onPhotoChange={(url) => setFlyerData({ ...flyerData, propertyPhotoUrl: url, photoPositionX: 50, photoPositionY: 50 })}
+                zoom={flyerData.photoZoom}
+                onZoomChange={(zoom) => setFlyerData({ ...flyerData, photoZoom: zoom })}
               />
             </div>
 
@@ -127,9 +127,13 @@ export default function NewFlyerPage() {
                 data={flyerData}
                 interestRate={interestRate}
                 loanOfficer={loanOfficer}
+                onPositionChange={(x, y) => setFlyerData({ ...flyerData, photoPositionX: x, photoPositionY: y })}
               />
               <p className="text-xs text-gray-500 text-center mt-3">
-                Preview updates as you type
+                {flyerData.propertyPhotoUrl
+                  ? 'Drag photo to reposition • Preview updates as you type'
+                  : 'Preview updates as you type'
+                }
               </p>
             </div>
           </div>

@@ -17,6 +17,7 @@ export interface FlyerData {
   propertyPhotoUrl: string | null
   photoPositionX: number  // 0-100, default 50 (center)
   photoPositionY: number  // 0-100, default 50 (center)
+  photoZoom: number       // 100-200, default 100 (no zoom)
 }
 
 interface FlyerFormProps {

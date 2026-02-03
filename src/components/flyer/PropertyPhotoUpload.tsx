@@ -6,17 +6,15 @@ import { createClient } from '@/lib/supabase/client'
 interface PropertyPhotoUploadProps {
   photoUrl: string | null
   onPhotoChange: (url: string | null) => void
-  positionX: number
-  positionY: number
-  onPositionChange: (x: number, y: number) => void
+  zoom: number
+  onZoomChange: (zoom: number) => void
 }
 
 export default function PropertyPhotoUpload({
   photoUrl,
   onPhotoChange,
-  positionX,
-  positionY,
-  onPositionChange
+  zoom,
+  onZoomChange
 }: PropertyPhotoUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -102,7 +100,7 @@ export default function PropertyPhotoUpload({
 
   const handleRemove = () => {
     onPhotoChange(null)
-    onPositionChange(50, 50) // Reset position
+    onZoomChange(100) // Reset zoom
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -113,7 +111,7 @@ export default function PropertyPhotoUpload({
       <h3 className="text-lg font-semibold text-[#403e36] mb-4">Property Photo</h3>
 
       {photoUrl ? (
-        // Photo preview with position controls
+        // Photo preview with zoom control
         <div>
           <div className="relative mb-4">
             <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100">
@@ -121,7 +119,6 @@ export default function PropertyPhotoUpload({
                 src={photoUrl}
                 alt="Property"
                 className="w-full h-full object-cover"
-                style={{ objectPosition: `${positionX}% ${positionY}%` }}
               />
             </div>
             <button
@@ -135,48 +132,34 @@ export default function PropertyPhotoUpload({
             </button>
           </div>
 
-          {/* Position controls */}
+          {/* Zoom control */}
           <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm font-medium text-gray-700">Adjust Photo Position</p>
-
             <div>
               <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Left</span>
-                <span>Horizontal: {positionX}%</span>
-                <span>Right</span>
+                <span>Zoom: {zoom}%</span>
+                <button
+                  onClick={() => onZoomChange(100)}
+                  className="text-[#403e36] hover:underline"
+                >
+                  Reset
+                </button>
               </div>
               <input
                 type="range"
-                min="0"
-                max="100"
-                value={positionX}
-                onChange={(e) => onPositionChange(parseInt(e.target.value), positionY)}
+                min="100"
+                max="200"
+                value={zoom}
+                onChange={(e) => onZoomChange(parseInt(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
               />
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Top</span>
-                <span>Vertical: {positionY}%</span>
-                <span>Bottom</span>
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>100%</span>
+                <span>200%</span>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={positionY}
-                onChange={(e) => onPositionChange(positionX, parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
             </div>
-
-            <button
-              onClick={() => onPositionChange(50, 50)}
-              className="text-xs text-[#403e36] hover:underline"
-            >
-              Reset to center
-            </button>
+            <p className="text-xs text-gray-500">
+              Drag the photo on the flyer preview to reposition
+            </p>
           </div>
         </div>
       ) : (

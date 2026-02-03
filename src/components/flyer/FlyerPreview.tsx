@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useRef, useCallback } from 'react'
 import { FlyerData } from './FlyerForm'
 import { calculateKickstart, formatCurrency, formatRate } from '@/lib/calculator/kickstart'
 
@@ -11,9 +12,85 @@ interface FlyerPreviewProps {
     phone: string
     nmls_number: string
   }
+  onPositionChange?: (x: number, y: number) => void
 }
 
-export default function FlyerPreview({ data, interestRate, loanOfficer }: FlyerPreviewProps) {
+export default function FlyerPreview({ data, interestRate, loanOfficer, onPositionChange }: FlyerPreviewProps) {
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null)
+  const photoContainerRef = useRef<HTMLDivElement>(null)
+
+  const handleDragStart = useCallback((clientX: number, clientY: number) => {
+    if (!data.propertyPhotoUrl || !onPositionChange) return
+    setIsDragging(true)
+    dragStartRef.current = {
+      x: clientX,
+      y: clientY,
+      posX: data.photoPositionX,
+      posY: data.photoPositionY,
+    }
+  }, [data.propertyPhotoUrl, data.photoPositionX, data.photoPositionY, onPositionChange])
+
+  const handleDragMove = useCallback((clientX: number, clientY: number) => {
+    if (!isDragging || !dragStartRef.current || !onPositionChange || !photoContainerRef.current) return
+
+    const container = photoContainerRef.current
+    const rect = container.getBoundingClientRect()
+
+    // Calculate the delta as a percentage of the container
+    // Invert the direction so dragging right moves the image right (shows left side)
+    const deltaX = ((dragStartRef.current.x - clientX) / rect.width) * 100
+    const deltaY = ((dragStartRef.current.y - clientY) / rect.height) * 100
+
+    // Apply zoom factor - more zoom means less movement needed
+    const zoomFactor = data.photoZoom / 100
+    const adjustedDeltaX = deltaX / zoomFactor
+    const adjustedDeltaY = deltaY / zoomFactor
+
+    // Calculate new position, clamped to 0-100
+    const newX = Math.max(0, Math.min(100, dragStartRef.current.posX + adjustedDeltaX))
+    const newY = Math.max(0, Math.min(100, dragStartRef.current.posY + adjustedDeltaY))
+
+    onPositionChange(newX, newY)
+  }, [isDragging, onPositionChange, data.photoZoom])
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false)
+    dragStartRef.current = null
+  }, [])
+
+  // Mouse events
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    handleDragStart(e.clientX, e.clientY)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    handleDragMove(e.clientX, e.clientY)
+  }
+
+  const handleMouseUp = () => {
+    handleDragEnd()
+  }
+
+  const handleMouseLeave = () => {
+    if (isDragging) handleDragEnd()
+  }
+
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    handleDragStart(touch.clientX, touch.clientY)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    handleDragMove(touch.clientX, touch.clientY)
+  }
+
+  const handleTouchEnd = () => {
+    handleDragEnd()
+  }
   const calculation = calculateKickstart({
     purchasePrice: data.propertyPrice,
     downPaymentPercent: data.downPaymentPercent,
@@ -36,13 +113,28 @@ export default function FlyerPreview({ data, interestRate, loanOfficer }: FlyerP
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ aspectRatio: '8.5/11', fontSize: '0.6rem' }}>
       {/* Property Photo Area */}
-      <div className="relative h-[30%] bg-gray-300">
+      <div
+        ref={photoContainerRef}
+        className={`relative h-[30%] bg-gray-300 ${data.propertyPhotoUrl && onPositionChange ? 'cursor-move' : ''} ${isDragging ? 'select-none' : ''}`}
+        onMouseDown={data.propertyPhotoUrl ? handleMouseDown : undefined}
+        onMouseMove={data.propertyPhotoUrl ? handleMouseMove : undefined}
+        onMouseUp={data.propertyPhotoUrl ? handleMouseUp : undefined}
+        onMouseLeave={data.propertyPhotoUrl ? handleMouseLeave : undefined}
+        onTouchStart={data.propertyPhotoUrl ? handleTouchStart : undefined}
+        onTouchMove={data.propertyPhotoUrl ? handleTouchMove : undefined}
+        onTouchEnd={data.propertyPhotoUrl ? handleTouchEnd : undefined}
+      >
         {data.propertyPhotoUrl ? (
           <img
             src={data.propertyPhotoUrl}
             alt="Property"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: `${data.photoPositionX}% ${data.photoPositionY}%` }}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            style={{
+              objectPosition: `${data.photoPositionX}% ${data.photoPositionY}%`,
+              transform: `scale(${data.photoZoom / 100})`,
+              transformOrigin: `${data.photoPositionX}% ${data.photoPositionY}%`
+            }}
+            draggable={false}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-gray-500">
@@ -52,6 +144,13 @@ export default function FlyerPreview({ data, interestRate, loanOfficer }: FlyerP
               </svg>
               <span className="text-sm">Property Photo</span>
             </div>
+          </div>
+        )}
+
+        {/* Drag hint overlay */}
+        {data.propertyPhotoUrl && onPositionChange && !isDragging && (
+          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+            <span className="bg-black/50 text-white text-xs px-2 py-1 rounded">Drag to reposition</span>
           </div>
         )}
 
