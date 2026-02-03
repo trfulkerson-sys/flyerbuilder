@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import puppeteer from 'puppeteer-core'
 import chromium from '@sparticuz/chromium'
 
-// Configure for Vercel serverless
-export const maxDuration = 60 // 60 seconds timeout for PDF generation
+// Ensure Node.js runtime (not Edge) - required for Puppeteer
+export const runtime = 'nodejs'
+export const maxDuration = 60
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
@@ -24,49 +25,59 @@ export async function POST(request: NextRequest) {
       loanOfficer
     })).toString('base64')
 
-    // Get the base URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+    // Use request origin to build URL (guarantees same deployment)
+    const origin = new URL(request.url).origin
+    const renderUrl = new URL(`/flyer/render?data=${encodeURIComponent(encodedData)}`, origin).toString()
 
-    const renderUrl = `${baseUrl}/flyer/render?data=${encodeURIComponent(encodedData)}`
+    console.log('PDF Generation - renderUrl:', renderUrl)
+    console.log('PDF Generation - origin:', origin)
 
-    // Get chromium executable path - download from remote for Vercel serverless
-    const executablePath = await chromium.executablePath(
-      'https://github.com/nicholaschiang/puppeteer-core/releases/download/v1.0.0/chromium.br'
-    )
+    // Get chromium executable path (no URL - use built-in)
+    console.log('PDF Generation - getting chromium executablePath...')
+    const executablePath = await chromium.executablePath()
+    console.log('PDF Generation - executablePath:', executablePath)
 
-    // Launch browser with Vercel-optimized settings
+    // Launch browser
+    console.log('PDF Generation - launching browser...')
     browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: null,
+      defaultViewport: { width: 816, height: 1056 },
       executablePath,
       headless: true,
     })
+    console.log('PDF Generation - browser launched')
 
     const page = await browser.newPage()
 
-    // Set viewport to letter size at 96 DPI
+    // Set viewport to letter size at 96 DPI with 2x scale
     await page.setViewport({
-      width: 816,  // 8.5 inches * 96 DPI
-      height: 1056, // 11 inches * 96 DPI
-      deviceScaleFactor: 2, // Higher quality
+      width: 816,
+      height: 1056,
+      deviceScaleFactor: 2,
     })
 
     // Navigate to render page
-    await page.goto(renderUrl, {
+    console.log('PDF Generation - navigating to:', renderUrl)
+    const response = await page.goto(renderUrl, {
       waitUntil: 'networkidle0',
       timeout: 20000,
     })
+    console.log('PDF Generation - goto status:', response?.status())
+
+    if (response?.status() === 404) {
+      throw new Error(`Render page returned 404. URL: ${renderUrl}`)
+    }
 
     // Wait for content to be ready
+    console.log('PDF Generation - waiting for #flyer-content...')
     await page.waitForSelector('#flyer-content', { timeout: 10000 })
+    console.log('PDF Generation - content ready')
 
     let contentType: string
     let filename: string
     let arrayBuffer: ArrayBuffer
 
     if (format === 'png') {
-      // Generate PNG screenshot
       const element = await page.$('#flyer-content')
       if (!element) {
         throw new Error('Flyer content not found')
@@ -75,19 +86,16 @@ export async function POST(request: NextRequest) {
         type: 'png',
         omitBackground: false,
       })
-      // Copy to fresh ArrayBuffer to satisfy TypeScript
       arrayBuffer = new ArrayBuffer(screenshot.byteLength)
       new Uint8Array(arrayBuffer).set(screenshot)
       contentType = 'image/png'
       filename = 'flyer.png'
     } else {
-      // Generate PDF
       const pdf = await page.pdf({
         format: 'Letter',
         printBackground: true,
         margin: { top: 0, right: 0, bottom: 0, left: 0 },
       })
-      // Copy to fresh ArrayBuffer to satisfy TypeScript
       arrayBuffer = new ArrayBuffer(pdf.byteLength)
       new Uint8Array(arrayBuffer).set(pdf)
       contentType = 'application/pdf'
@@ -95,8 +103,8 @@ export async function POST(request: NextRequest) {
     }
 
     await browser.close()
+    console.log('PDF Generation - success!')
 
-    // Return the file
     return new Response(arrayBuffer, {
       headers: {
         'Content-Type': contentType,
@@ -105,7 +113,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('PDF generation error:', error)
-    // Make sure to close browser on error
+
     if (browser) {
       try {
         await browser.close()
@@ -114,7 +122,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get detailed error info
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     const errorStack = error instanceof Error ? error.stack : undefined
     console.error('Error details:', { message: errorMessage, stack: errorStack })

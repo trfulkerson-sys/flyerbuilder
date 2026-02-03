@@ -1,8 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import html2canvas from 'html2canvas'
-import { jsPDF } from 'jspdf'
+import { useState, useEffect } from 'react'
 import FlyerForm, { FlyerData } from '@/components/flyer/FlyerForm'
 import FlyerPreview from '@/components/flyer/FlyerPreview'
 import PropertyPhotoUpload from '@/components/flyer/PropertyPhotoUpload'
@@ -13,7 +11,6 @@ export default function NewFlyerPage() {
   const [interestRate, setInterestRate] = useState(DEFAULT_RATE)
   const [rateLoading, setRateLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
-  const previewRef = useRef<HTMLDivElement>(null)
 
   const [flyerData, setFlyerData] = useState<FlyerData>({
     propertyAddress: '',
@@ -59,53 +56,37 @@ export default function NewFlyerPage() {
     nmls_number: '12345',
   }
 
-  // Download PDF handler - client-side generation
+  // Download PDF handler - server-side generation
   const handleDownloadPDF = async () => {
-    if (!previewRef.current) {
-      alert('Preview not ready')
-      return
-    }
-
     setDownloading(true)
     try {
-      // Capture the preview as a canvas with high quality
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2, // Higher resolution
-        useCORS: true, // Allow cross-origin images
-        logging: false,
-        backgroundColor: '#ffffff',
-        // Fix for modern CSS color functions like lab() that html2canvas doesn't support
-        onclone: (_document, element) => {
-          // Convert computed colors to avoid lab() parsing issues
-          const allElements = element.querySelectorAll('*')
-          allElements.forEach((el) => {
-            const htmlEl = el as HTMLElement
-            const computed = window.getComputedStyle(htmlEl)
-            htmlEl.style.color = computed.color
-            htmlEl.style.backgroundColor = computed.backgroundColor
-            htmlEl.style.borderColor = computed.borderColor
-          })
-        }
+      const response = await fetch('/api/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flyerData,
+          interestRate,
+          loanOfficer,
+          format: 'pdf'
+        })
       })
 
-      // Create PDF in letter size (8.5 x 11 inches)
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'in',
-        format: 'letter',
-      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('PDF API error:', errorData)
+        throw new Error(errorData.details || errorData.error || 'Failed to generate PDF')
+      }
 
-      // Calculate dimensions to fit the canvas into the PDF
-      const imgData = canvas.toDataURL('image/png')
-      const pdfWidth = 8.5
-      const pdfHeight = 11
-
-      // Add the image to fill the page
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
-
-      // Download the PDF
-      const filename = `flyer-${flyerData.propertyAddress || 'property'}.pdf`
-      pdf.save(filename)
+      // Download the file
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `flyer-${flyerData.propertyAddress || 'property'}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
     } catch (error) {
       console.error('Download error:', error)
       alert(error instanceof Error ? error.message : 'Failed to download PDF')
@@ -183,14 +164,12 @@ export default function NewFlyerPage() {
           <div>
             <h2 className="text-xl font-semibold text-[#403e36] mb-4">Flyer Preview</h2>
             <div className="sticky top-4">
-              <div ref={previewRef}>
-                <FlyerPreview
-                  data={flyerData}
-                  interestRate={interestRate}
-                  loanOfficer={loanOfficer}
-                  onPositionChange={(x, y) => setFlyerData({ ...flyerData, photoPositionX: x, photoPositionY: y })}
-                />
-              </div>
+              <FlyerPreview
+                data={flyerData}
+                interestRate={interestRate}
+                loanOfficer={loanOfficer}
+                onPositionChange={(x, y) => setFlyerData({ ...flyerData, photoPositionX: x, photoPositionY: y })}
+              />
               <p className="text-xs text-gray-500 text-center mt-3">
                 {flyerData.propertyPhotoUrl
                   ? 'Drag photo to reposition • Preview updates as you type'
