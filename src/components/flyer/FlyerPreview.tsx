@@ -115,7 +115,7 @@ export default function FlyerPreview({ data, interestRate, loanOfficer, onPositi
       {/* Property Photo Area */}
       <div
         ref={photoContainerRef}
-        className={`relative h-[30%] bg-gray-300 ${data.propertyPhotoUrl && onPositionChange ? 'cursor-move' : ''} ${isDragging ? 'select-none' : ''}`}
+        className={`relative h-[30%] bg-gray-300 overflow-hidden ${data.propertyPhotoUrl && onPositionChange ? 'cursor-move' : ''} ${isDragging ? 'select-none' : ''}`}
         onMouseDown={data.propertyPhotoUrl ? handleMouseDown : undefined}
         onMouseMove={data.propertyPhotoUrl ? handleMouseMove : undefined}
         onMouseUp={data.propertyPhotoUrl ? handleMouseUp : undefined}
