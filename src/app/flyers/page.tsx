@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Flyer, Realtor } from '@/types/database'
 import { formatCurrency } from '@/lib/calculator/kickstart'
@@ -13,6 +13,14 @@ interface FlyerWithRealtor extends Flyer {
 }
 
 export default function FlyerListPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF5F0] flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>}>
+      <FlyerListContent />
+    </Suspense>
+  )
+}
+
+function FlyerListContent() {
   const searchParams = useSearchParams()
   const loId = searchParams.get('lo_id') || ''
   const realtorId = searchParams.get('realtor_id')

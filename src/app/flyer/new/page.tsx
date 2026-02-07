@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FlyerForm, { FlyerData } from '@/components/flyer/FlyerForm'
 import FlyerPreview from '@/components/flyer/FlyerPreview'
@@ -11,6 +11,14 @@ import { Realtor, LoanOfficer } from '@/types/database'
 const DEFAULT_RATE = 6.99
 
 export default function NewFlyerPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF5F0] flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>}>
+      <NewFlyerContent />
+    </Suspense>
+  )
+}
+
+function NewFlyerContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 

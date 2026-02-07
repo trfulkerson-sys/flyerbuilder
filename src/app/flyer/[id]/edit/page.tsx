@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import FlyerForm, { FlyerData } from '@/components/flyer/FlyerForm'
 import FlyerPreview from '@/components/flyer/FlyerPreview'
@@ -17,6 +17,14 @@ interface FlyerWithRealtor extends Flyer {
 }
 
 export default function EditFlyerPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF5F0] flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>}>
+      <EditFlyerContent />
+    </Suspense>
+  )
+}
+
+function EditFlyerContent() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
