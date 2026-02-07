@@ -50,6 +50,7 @@ export interface Flyer {
   created_at: string
   updated_at: string
   realtor_id: string
+  created_by_lo_id: string | null
   status: 'draft' | 'active' | 'archived'
   template_id: string
   // Property details
@@ -68,6 +69,10 @@ export interface Flyer {
   // Down payment
   down_payment_percent: number
 }
+
+// For creating/updating flyers (omit server-generated fields)
+export type FlyerInsert = Omit<Flyer, 'id' | 'created_at' | 'updated_at'>
+export type FlyerUpdate = Partial<Omit<Flyer, 'id' | 'created_at' | 'updated_at'>>
 
 // Joined types for when we need related data
 export interface RealtorWithLO extends Realtor {
