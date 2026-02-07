@@ -1,23 +1,29 @@
 import { createClient } from '@/lib/supabase/server'
 
 export default async function Home() {
-  // Test Supabase connection
   let connectionStatus = 'checking...'
   let loCount = 0
+  let realtorCount = 0
+  let flyerCount = 0
 
   try {
     const supabase = await createClient()
-    const { count, error } = await supabase
-      .from('loan_officers')
-      .select('*', { count: 'exact', head: true })
 
-    if (error) {
-      connectionStatus = `Error: ${error.message}`
+    const [loResult, realtorResult, flyerResult] = await Promise.all([
+      supabase.from('loan_officers').select('*', { count: 'exact', head: true }),
+      supabase.from('realtors').select('*', { count: 'exact', head: true }),
+      supabase.from('flyers').select('*', { count: 'exact', head: true }),
+    ])
+
+    if (loResult.error) {
+      connectionStatus = `Error: ${loResult.error.message}`
     } else {
       connectionStatus = 'Connected'
-      loCount = count || 0
+      loCount = loResult.count || 0
+      realtorCount = realtorResult.count || 0
+      flyerCount = flyerResult.count || 0
     }
-  } catch (e) {
+  } catch {
     connectionStatus = 'Failed to connect'
   }
 
@@ -31,77 +37,76 @@ export default async function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
-        {/* Status Card */}
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <a
+            href="/flyers"
+            className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-[#403e36]">View All Flyers</h2>
+                <p className="text-sm text-gray-500">{flyerCount} flyer{flyerCount !== 1 ? 's' : ''} saved</p>
+              </div>
+            </div>
+          </a>
+
+          <a
+            href="/flyer/new"
+            className="bg-[#403e36] rounded-lg shadow-lg p-8 hover:bg-[#2d2c27] transition-colors group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-white">Create New Flyer</h2>
+                <p className="text-sm text-gray-300">Start a new property flyer</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        {/* Stats */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h2 className="text-xl font-semibold text-[#403e36] mb-4">System Status</h2>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 border-b">
-              <span className="text-gray-600">Supabase Connection</span>
-              <span className={`font-medium ${connectionStatus === 'Connected' ? 'text-green-600' : 'text-red-600'}`}>
-                {connectionStatus}
-              </span>
+          <h2 className="text-xl font-semibold text-[#403e36] mb-4">Dashboard</h2>
+          <div className="grid grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-[#403e36]">{flyerCount}</div>
+              <div className="text-sm text-gray-500 mt-1">Flyers</div>
             </div>
-
-            <div className="flex items-center justify-between py-2 border-b">
-              <span className="text-gray-600">Loan Officers in Database</span>
-              <span className="font-medium text-[#403e36]">{loCount}</span>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-[#403e36]">{realtorCount}</div>
+              <div className="text-sm text-gray-500 mt-1">Realtors</div>
             </div>
-
-            <div className="flex items-center justify-between py-2">
-              <span className="text-gray-600">App Status</span>
-              <span className="font-medium text-green-600">Running</span>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-[#403e36]">{loCount}</div>
+              <div className="text-sm text-gray-500 mt-1">Loan Officers</div>
             </div>
           </div>
         </div>
 
-        {/* Create Flyer CTA */}
-        {connectionStatus === 'Connected' && loCount > 0 && (
-          <div className="bg-[#403e36] rounded-lg shadow-lg p-8 mb-8 text-center">
-            <h2 className="text-2xl font-bold text-white mb-2">Ready to Create a Flyer?</h2>
-            <p className="text-gray-300 mb-6">Your system is set up. Start creating property flyers now.</p>
-            <a
-              href="/flyer/new"
-              className="inline-block bg-green-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-600 transition-colors"
-            >
-              Create New Flyer
-            </a>
+        {/* System Status */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">System Status</h3>
+          <div className="flex items-center gap-2">
+            <div className={`w-2.5 h-2.5 rounded-full ${connectionStatus === 'Connected' ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span className="text-sm text-gray-600">
+              Supabase: {connectionStatus}
+            </span>
           </div>
-        )}
-
-        {/* Next Steps Card */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-xl font-semibold text-[#403e36] mb-4">Setup Checklist</h2>
-
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3">
-              <span className={`mt-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs ${connectionStatus === 'Connected' ? 'bg-green-500' : 'bg-gray-300'}`}>
-                {connectionStatus === 'Connected' ? '✓' : ''}
-              </span>
-              <span className="text-gray-700">Connect Supabase database</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className={`mt-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs ${loCount > 0 ? 'bg-green-500' : 'bg-gray-300'}`}>
-                {loCount > 0 ? '✓' : ''}
-              </span>
-              <span className="text-gray-700">Add at least one Loan Officer</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="mt-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">✓</span>
-              <span className="text-gray-700">Build flyer creation form</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="mt-1 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-white text-xs"></span>
-              <span className="text-gray-700">Add authentication system</span>
-            </li>
-          </ul>
         </div>
 
-        {/* Info */}
-        <p className="text-center text-gray-500 text-sm mt-8">
-          Flyer Builder v0.1 - Phase 1 in progress
+        <p className="text-center text-gray-400 text-sm mt-8">
+          Flyer Builder v0.2 - Flyer persistence enabled
         </p>
       </main>
     </div>

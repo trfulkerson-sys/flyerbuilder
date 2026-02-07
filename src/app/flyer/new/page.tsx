@@ -1,16 +1,53 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import FlyerForm, { FlyerData } from '@/components/flyer/FlyerForm'
 import FlyerPreview from '@/components/flyer/FlyerPreview'
 import PropertyPhotoUpload from '@/components/flyer/PropertyPhotoUpload'
+import RealtorSelector from '@/components/flyer/RealtorSelector'
+import { Realtor, LoanOfficer } from '@/types/database'
 
 const DEFAULT_RATE = 6.99
 
 export default function NewFlyerPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF5F0] flex items-center justify-center"><p className="text-gray-500">Loading...</p></div>}>
+      <NewFlyerContent />
+    </Suspense>
+  )
+}
+
+function NewFlyerContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [interestRate, setInterestRate] = useState(DEFAULT_RATE)
   const [rateLoading, setRateLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [selectedRealtor, setSelectedRealtor] = useState<Realtor | null>(null)
+
+  // TODO: Replace with actual auth context when auth is built
+  // For now, mock the current user as an LO
+  const currentLO: LoanOfficer | null = {
+    id: searchParams.get('lo_id') || '',
+    created_at: '',
+    email: '',
+    name: 'Trevor Fulkerson',
+    phone: '619-569-8648',
+    nmls_number: '12345',
+    headshot_url: null,
+    qr_code_url: null,
+    calculator_url: null,
+    website_url: null,
+    webhook_url: null,
+    is_active: true,
+  }
+
+  // Pre-select realtor if passed via URL
+  const preselectedRealtorId = searchParams.get('realtor_id')
 
   const [flyerData, setFlyerData] = useState<FlyerData>({
     propertyAddress: '',
@@ -49,11 +86,76 @@ export default function NewFlyerPage() {
     fetchRate()
   }, [])
 
-  // Mock loan officer data for now (would come from auth context later)
-  const loanOfficer = {
-    name: 'Trevor Fulkerson',
-    phone: '619-569-8648',
-    nmls_number: '12345',
+  // Loan officer data for the preview (from selected realtor's LO or current LO)
+  const loanOfficer = selectedRealtor
+    ? {
+        name: (selectedRealtor as Realtor & { loan_officer?: LoanOfficer }).loan_officer?.name || currentLO.name,
+        phone: (selectedRealtor as Realtor & { loan_officer?: LoanOfficer }).loan_officer?.phone || currentLO.phone,
+        nmls_number: (selectedRealtor as Realtor & { loan_officer?: LoanOfficer }).loan_officer?.nmls_number || currentLO.nmls_number,
+      }
+    : {
+        name: currentLO.name,
+        phone: currentLO.phone,
+        nmls_number: currentLO.nmls_number,
+      }
+
+  // Save flyer to database
+  const handleSave = async (status: 'draft' | 'active' = 'draft') => {
+    if (!selectedRealtor) {
+      setSaveError('Please select a realtor before saving.')
+      return
+    }
+
+    if (!flyerData.propertyAddress || !flyerData.propertyCity || !flyerData.propertyState || !flyerData.propertyZip) {
+      setSaveError('Please fill in the property address.')
+      return
+    }
+
+    if (!flyerData.propertyPrice || flyerData.propertyPrice <= 0) {
+      setSaveError('Please enter a valid property price.')
+      return
+    }
+
+    setSaving(true)
+    setSaveError(null)
+
+    try {
+      const response = await fetch('/api/flyers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          realtor_id: selectedRealtor.id,
+          created_by_lo_id: currentLO.id || null,
+          status,
+          property_address: flyerData.propertyAddress,
+          property_city: flyerData.propertyCity,
+          property_state: flyerData.propertyState,
+          property_zip: flyerData.propertyZip,
+          property_price: flyerData.propertyPrice,
+          bedrooms: flyerData.bedrooms,
+          bathrooms: flyerData.bathrooms,
+          square_footage: flyerData.squareFootage,
+          property_photo_url: flyerData.propertyPhotoUrl,
+          photo_position_x: flyerData.photoPositionX,
+          photo_position_y: flyerData.photoPositionY,
+          photo_zoom: flyerData.photoZoom,
+          down_payment_percent: flyerData.downPaymentPercent,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save flyer')
+      }
+
+      const saved = await response.json()
+      router.push(`/flyer/${saved.id}/edit?saved=true`)
+    } catch (error) {
+      console.error('Save error:', error)
+      setSaveError(error instanceof Error ? error.message : 'Failed to save flyer')
+    } finally {
+      setSaving(false)
+    }
   }
 
   // Download PDF handler - server-side generation
@@ -73,11 +175,9 @@ export default function NewFlyerPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        console.error('PDF API error:', errorData)
         throw new Error(errorData.details || errorData.error || 'Failed to generate PDF')
       }
 
-      // Download the file
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -104,8 +204,8 @@ export default function NewFlyerPage() {
             <h1 className="text-xl font-bold">KATALYST FLYER BUILDER</h1>
             <p className="text-sm text-gray-400">Create a new property flyer</p>
           </div>
-          <a href="/" className="text-sm text-gray-400 hover:text-white">
-            &larr; Back
+          <a href="/flyers" className="text-sm text-gray-400 hover:text-white">
+            &larr; All Flyers
           </a>
         </div>
       </header>
@@ -115,6 +215,15 @@ export default function NewFlyerPage() {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Left: Form */}
           <div>
+            {/* Realtor Selector */}
+            <div className="mb-6">
+              <RealtorSelector
+                loId={currentLO.id}
+                preselectedRealtorId={preselectedRealtorId}
+                onSelect={setSelectedRealtor}
+              />
+            </div>
+
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-[#403e36]">Property Details</h2>
               {rateLoading ? (
@@ -142,13 +251,21 @@ export default function NewFlyerPage() {
               />
             </div>
 
+            {/* Error display */}
+            {saveError && (
+              <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {saveError}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="mt-6 flex gap-3">
               <button
-                className="flex-1 bg-[#403e36] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#2d2c27] transition-colors"
-                onClick={() => alert('Save functionality coming soon!')}
+                className="flex-1 bg-[#403e36] text-white font-semibold py-3 px-6 rounded-lg hover:bg-[#2d2c27] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => handleSave('draft')}
+                disabled={saving}
               >
-                Save Flyer
+                {saving ? 'Saving...' : 'Save as Draft'}
               </button>
               <button
                 className="flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -158,6 +275,13 @@ export default function NewFlyerPage() {
                 {downloading ? 'Generating PDF...' : 'Download PDF'}
               </button>
             </div>
+            <button
+              className="mt-3 w-full bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => handleSave('active')}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save & Publish'}
+            </button>
           </div>
 
           {/* Right: Preview */}
@@ -172,7 +296,7 @@ export default function NewFlyerPage() {
               />
               <p className="text-xs text-gray-500 text-center mt-3">
                 {flyerData.propertyPhotoUrl
-                  ? 'Drag photo to reposition • Preview updates as you type'
+                  ? 'Drag photo to reposition \u2022 Preview updates as you type'
                   : 'Preview updates as you type'
                 }
               </p>
